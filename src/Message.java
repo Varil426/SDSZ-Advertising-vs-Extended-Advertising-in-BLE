@@ -20,6 +20,4 @@ public abstract class Message {
     int getSenderID() {
         return this.senderID;
     }
-
-
 }
