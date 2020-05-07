@@ -1,101 +1,60 @@
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Random;
 
 public abstract class Device {
-    double[] position = {0d,0d};
+    public class Pair<L,R> {
+        private L l;
+        private R r;
+        public Pair(L l, R r){
+            this.l = l;
+            this.r = r;
+        }
+        public L getL(){ return l; }
+        public R getR(){ return r; }
+        public void setL(L l){ this.l = l; }
+        public void setR(R r){ this.r = r; }
+    }
+    double[] position;
     int deviceID;
+    Random rand = new Random();
+    byte[] data;
+    //ArrayList<Message> receivedMessages;
+    ArrayList<Pair<Message, Integer>> receivedMessages;
+    int sentCounter = 0;
+    int sendFor = 5;
     enum Mode {
         WAIT,
-        LISTEN,
         SCAN,
-        BROADCAST,
-        ADVERTISE
+        LISTEN,
+        SENT,
+        ADVERTISE,
+        FINISHED
     }
     Mode mode = Mode.WAIT;
-    Random rand = new Random();
-    //TODO boolean shouldListen = false;
-    byte[] content;
-    int channelToBroadcast;
-    long timeToBroadcast;
-    int channelToListen;
-    long timeToListen;
-    Device() {
+    Device(){
         this.deviceID = 0;
+        this.position = new double[]{0.0, 0.0};
+        this.receivedMessages = new ArrayList<Pair<Message,Integer>>();
     }
-    Device(double x, double y, int deviceID){
-        this.position[0] = x;
-        this.position[1] = y;
+    Device(int deviceID) {
+        this();
         this.deviceID = deviceID;
     }
-    abstract boolean advertise();
-    abstract void broadcast();
-    void scan() {
-        ByteBuffer buffer = null;
-        for (int i = 37; i < 40; i++) {
-            if(!Simulation.World.channels[i].empty) {
-                buffer = ByteBuffer.wrap(Simulation.World.channels[i].payload);
-                break;
+    abstract void scan();
+    abstract void advertise();
+    abstract void generateMessage();
+    void generateContent() {
+        this.data = new byte[rand.nextInt(2550)];
+        rand.nextBytes(this.data);
+    }
+    //TODO czy nie zmienić TTL na czasowe (long)
+    void decreaseTTL() {
+        for (int i = 0; i < this.receivedMessages.size(); i++) {
+            this.receivedMessages.get(i).setR(this.receivedMessages.get(i).getR()-1);
+            if(this.receivedMessages.get(i).getR()==0) {
+                this.receivedMessages.remove(i);
+                i--;
             }
-        }
-        if(buffer == null) {
-            //TODO
-            return;
-        }
-        /*for (byte b: buffer.array()) {
-            System.out.print(b + " ");
-        }
-        System.out.println();*/
-        byte[] message = buffer.array();
-        this.channelToListen = message[0];
-        this.timeToListen = Simulation.World.time.getTime() + ByteBuffer.wrap(Arrays.copyOfRange(message, 1, 9)).getLong();
-        //System.out.println(channelToListen + " " + timeToListen);
-        this.mode = Mode.LISTEN;
-    }
-    void setMode(Mode mode) {
-        this.mode = mode;
-    }
-    Mode getMode() {
-        return this.mode;
-    }
-    void generateContent(){
-        this.content = new byte[rand.nextInt(2550)];
-        rand.nextBytes(this.content);
-        /*for (byte b: content) {
-            System.out.print(b + " ");
-        }*/
-    }
-    void listen() {
-        //System.out.println(this.timeToListen + " " + Simulation.World.time.getTime());
-        if(this.timeToListen <= Simulation.World.time.getTime() + 20 && timeToListen >= Simulation.World.time.getTime()) {
-            ByteBuffer buffer = ByteBuffer.wrap(Simulation.World.channels[this.channelToListen].payload);
-
-            byte[] c = buffer.array();
-            for(byte b:c){
-                System.out.print(b + " ");
-            }
-            System.out.println();
-
-            this.mode = Mode.SCAN;
-        }
-    }
-
-    void doAction(){
-        switch (this.mode) {
-            case WAIT:
-                break;
-            case LISTEN:
-                this.listen();
-                break;
-            case SCAN:
-                this.scan();
-                break;
-            case BROADCAST:
-                this.broadcast();
-                break;
-            case ADVERTISE:
-                this.advertise();
-                break;
         }
     }
 }

@@ -1,28 +1,25 @@
-import java.sql.Time;
-
 public class Channel {
     int id;
     boolean empty = true;
-    byte[] payload = new byte[255];
-    Time payloadArrival;
+    Message payload;
 
     Channel(int id) {
         this.id = id;
     }
 
-    void setPayload(byte[] payload) throws Exception {
-        if(payload.length > 255) throw new Exception("Payload size too big");
+    void setPayload(Message payload) {
+        //TODO coś sprawjące czy istnieje jakaś wiaodmość, czy nie jest spierdolona
         this.payload = payload;
         this.empty = false;
-        this.payloadArrival = new Time(Simulation.World.time.getTime());
+        //this.payloadArrival = new Time(Simulation.World.time.getTime());
     }
-    byte[] getPayload() {
+
+    Message getPayload() {
         return payload;
     }
+
     void clearPayload() {
-        if(Simulation.World.time.getTime() > this.payloadArrival.getTime() + 20) {
-            this.payload = null;
-            this.empty = true;
-        }
+        this.payload = null;
+        this.empty = true;
     }
 }
