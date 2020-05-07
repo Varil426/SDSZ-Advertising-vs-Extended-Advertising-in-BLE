@@ -1,4 +1,6 @@
-package PACKAGE_NAME;
-
 public class Device {
+    double[] position;
+    int deviceID;
+    byte[] data;
+
 }
