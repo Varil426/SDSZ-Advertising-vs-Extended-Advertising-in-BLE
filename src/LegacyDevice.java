@@ -38,21 +38,21 @@ public class LegacyDevice extends Device {
 
     @Override
     void advertise() {
-        if(this.sendFor > this.sentCounter) {
-            Simulation.World.channels[37+this.sentCounter%3].setPayload(this.message);
-            this.sentCounter++;
+        if(this.advertiseFor > this.advertiseCounter) {
+            Simulation.World.channels[37+this.advertiseCounter %3].setPayload(this.message);
+            this.advertiseCounter++;
         } else {
             if(this.contentPart <= (int) Math.ceil(this.data.length/23)) {
-                this.generateMessage();
+                this.generateAdvertisement();
             } else {
                 this.mode = Mode.FINISHED;
+                this.contentPart = 0;
             }
         }
     }
 
-    @Override
-    void generateMessage() {
-        this.sentCounter = 0;
+    void generateAdvertisement() {
+        this.advertiseCounter = 0;
         int numberOfParts = (int) Math.ceil(this.data.length/23);
         ByteBuffer buffer;
         if(this.contentPart == numberOfParts) buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*23, this.data.length));

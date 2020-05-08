@@ -20,13 +20,14 @@ public abstract class Device {
     byte[] data;
     //ArrayList<Message> receivedMessages;
     ArrayList<Pair<Message, Integer>> receivedMessages;
-    int sentCounter = 0;
-    int sendFor = 5;
+    //Number of advertise actions
+    int advertiseCounter = 0;
+    int advertiseFor = 5;
     enum Mode {
         WAIT,
         SCAN,
         LISTEN,
-        SENT,
+        SECONDARY,
         ADVERTISE,
         FINISHED
     }
@@ -42,7 +43,6 @@ public abstract class Device {
     }
     abstract void scan();
     abstract void advertise();
-    abstract void generateMessage();
     void generateContent() {
         this.data = new byte[rand.nextInt(2550)];
         rand.nextBytes(this.data);
