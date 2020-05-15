@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.Random;
 
-public abstract class Device {
+public abstract class Device extends Thread {
     public class Pair<L,R> {
         private L l;
         private R r;
@@ -18,11 +18,13 @@ public abstract class Device {
     int deviceID;
     Random rand = new Random();
     byte[] data;
+    //TODO receivedData zastanowić się
+    ArrayList<Byte> receivedData = new ArrayList<>();
     //ArrayList<Message> receivedMessages;
-    ArrayList<Pair<Message, Integer>> receivedMessages;
+    ArrayList<Pair<Message, Long>> receivedMessages;
     //Number of advertise actions
     int advertiseCounter = 0;
-    int advertiseFor = 5;
+    int advertiseFor = 6;
     enum Mode {
         WAIT,
         SCAN,
@@ -35,7 +37,7 @@ public abstract class Device {
     Device(){
         this.deviceID = 0;
         this.position = new double[]{0.0, 0.0};
-        this.receivedMessages = new ArrayList<Pair<Message,Integer>>();
+        this.receivedMessages = new ArrayList<Pair<Message,Long>>();
     }
     Device(int deviceID) {
         this();
@@ -43,15 +45,15 @@ public abstract class Device {
     }
     abstract void scan();
     abstract void advertise();
+    abstract public void run();
     void generateContent() {
-        this.data = new byte[rand.nextInt(2550)];
+        //this.data = new byte[rand.nextInt(2550)];
+        this.data = new byte[343];
         rand.nextBytes(this.data);
     }
-    //TODO czy nie zmienić TTL na czasowe (long)
-    void decreaseTTL() {
+    void removeOldMessages() {
         for (int i = 0; i < this.receivedMessages.size(); i++) {
-            this.receivedMessages.get(i).setR(this.receivedMessages.get(i).getR()-1);
-            if(this.receivedMessages.get(i).getR()==0) {
+            if(this.receivedMessages.get(i).getR() + 1000000 <= System.nanoTime()) {
                 this.receivedMessages.remove(i);
                 i--;
             }

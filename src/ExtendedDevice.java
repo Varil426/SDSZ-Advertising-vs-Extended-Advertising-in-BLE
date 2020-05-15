@@ -27,7 +27,7 @@ public class ExtendedDevice extends Device {
                     }
                 }
                 if(newMessage) {
-                    this.receivedMessages.add(new Pair<Message, Integer>(currentMessage, 7));
+                    this.receivedMessages.add(new Pair<Message, Long>(currentMessage, System.nanoTime()));
                     this.receivedAdvertisement = (PrimaryExtendedMessage) currentMessage;
                     this.mode = Mode.LISTEN;
                 }
@@ -37,7 +37,7 @@ public class ExtendedDevice extends Device {
 
     @Override
     void advertise() {
-        if(this.advertiseFor > this.advertiseCounter && this.contentPart <= (int) Math.ceil(this.data.length/247)) {
+        /*if(this.advertiseFor > this.advertiseCounter && this.contentPart <= (int) Math.ceil(this.data.length/247)) {
             Simulation.World.channels[37+this.advertiseCounter %3].setPayload(this.primary);
             this.advertiseCounter++;
         } else {
@@ -49,16 +49,21 @@ public class ExtendedDevice extends Device {
                 this.mode = Mode.FINISHED;
                 this.contentPart = 0;
             }
-        }
+        }*/
+    }
+
+    @Override
+    public void run() {
+
     }
 
     void secondaryAdvertise() {
-        System.out.println(Simulation.World.getTime() + " " + this.primary.time);
+        /*System.out.println(Simulation.World.getTime() + " " + this.primary.time);
         if(Simulation.World.getTime()-Simulation.World.timeStep/2 <= this.primary.time && Simulation.World.getTime()+Simulation.World.timeStep/2 >= this.primary.time) {
             Simulation.World.channels[this.primary.channel].setPayload(this.secondary);
             this.mode = Mode.ADVERTISE;
             this.generatePrimaryAdvertisement();
-        }
+        }*/
     }
 
     void secondaryListen() {
@@ -74,8 +79,8 @@ public class ExtendedDevice extends Device {
     }
 
     void generatePrimaryAdvertisement() {
-        this.advertiseCounter = 0;
-        this.primary = new PrimaryExtendedMessage(this.rand.nextInt(100), this.deviceID, this.rand.nextInt(37), Simulation.World.getTime()+(this.advertiseFor+2)*Simulation.World.timeStep);
+        /*this.advertiseCounter = 0;
+        this.primary = new PrimaryExtendedMessage(this.rand.nextInt(100), this.deviceID, this.rand.nextInt(37), Simulation.World.getTime()+(this.advertiseFor+2)*Simulation.World.timeStep);*/
     }
     void generateSecondaryAdvertisement() {
         int numberOfParts = (int) Math.ceil(this.data.length/247);
