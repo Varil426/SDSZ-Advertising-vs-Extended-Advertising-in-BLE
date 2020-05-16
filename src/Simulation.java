@@ -14,6 +14,7 @@ public class Simulation {
         System.out.println("Legacy");
         LegacyDevice a = new LegacyDevice(0);
         a.generateContent();
+        a.generateAdvertisement();
         System.out.println(a.data.length);
         a.mode = Device.Mode.ADVERTISE;
         LegacyDevice b = new LegacyDevice(1);
