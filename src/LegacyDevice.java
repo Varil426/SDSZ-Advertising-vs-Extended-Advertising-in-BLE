@@ -42,8 +42,9 @@ public class LegacyDevice extends Device {
 
     @Override
     void advertise() {
-        //TODO tmp zmienić
-        long tmp = (long) Math.ceil(32000000/1048576);
+        //TODO tmp zmienić żeby brało pod uwagę rozmiar wiadomości a nie stałe
+        //Multiply by 1000000 to get time to sent in nanoseconds
+        long tmp = (long) Math.ceil((32*1000000)/1048576);
         if(this.advertiseFor > this.advertiseCounter) {
             Simulation.World.channels[37+this.advertiseCounter %3].setPayload(this.message, tmp);
             try {
@@ -57,8 +58,7 @@ public class LegacyDevice extends Device {
                 this.generateAdvertisement();
             } else {
                 this.mode = Mode.FINISHED;
-                for (byte b :
-                        this.data) {
+                for (byte b : this.data) {
                     System.out.print(b + ", ");
                 }
                 System.out.println();
@@ -83,7 +83,6 @@ public class LegacyDevice extends Device {
                     break;
                 case ADVERTISE:
                     this.advertise();
-                    break;
             }
         }
     }

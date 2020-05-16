@@ -10,6 +10,74 @@ public class ExtendedDevice extends Device {
     ExtendedDevice(int deviceID) {
         super(deviceID);
     }
+
+    @Override
+    public void run() {
+        while (this.mode != Mode.FINISHED) {
+            switch (this.mode) {
+                case WAIT:
+                    try {
+                        sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case ADVERTISE:
+                    this.advertise();
+                    break;
+                case SECONDARY:
+                    this.secondaryAdvertise();
+                    break;
+                case SCAN:
+                    this.scan();
+                    break;
+                case LISTEN:
+                    this.secondaryListen();
+            }
+        }
+    }
+
+    @Override
+    void advertise() {
+        //TODO tmp zmienić żeby brało pod uwagę rozmiar wiadomości a nie stałe
+        long tmp = (long) Math.ceil(32000000/1048576);
+        if(this.advertiseFor > this.advertiseCounter && this.contentPart <= (int) Math.ceil(this.data.length/247)) {
+            Simulation.World.channels[37+this.advertiseCounter %3].setPayload(this.primary, tmp);
+            try {
+                sleep(0, (int) tmp);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            this.advertiseCounter++;
+        } else {
+            //Może robić problemy
+            if(this.contentPart <= (int) Math.ceil(this.data.length/247)) {
+                this.generateSecondaryAdvertisement();
+                this.mode = Mode.SECONDARY;
+            } else {
+                this.mode = Mode.FINISHED;
+                this.contentPart = 0;
+            }
+        }
+    }
+
+    void secondaryAdvertise() {
+        //TODO Czy zostawic to advertiseFor?
+        if(System.nanoTime() >= this.primary.time && this.advertiseCounter < this.advertiseFor) {
+            long tmp = (long) Math.ceil((255 * 1000000)/1048576);
+            Simulation.World.channels[this.primary.channel].setPayload(this.secondary, tmp);
+            try {
+                sleep(0, (int) tmp);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            this.advertiseCounter++;
+        } else {
+            this.mode = Mode.ADVERTISE;
+            this.generatePrimaryAdvertisement();
+        }
+    }
+
     @Override
     void scan() {
         for (int i = Simulation.World.numberOfChannels-3; i < Simulation.World.numberOfChannels; i++) {
@@ -35,59 +103,43 @@ public class ExtendedDevice extends Device {
         }
     }
 
-    @Override
-    void advertise() {
-        /*if(this.advertiseFor > this.advertiseCounter && this.contentPart <= (int) Math.ceil(this.data.length/247)) {
-            Simulation.World.channels[37+this.advertiseCounter %3].setPayload(this.primary);
-            this.advertiseCounter++;
-        } else {
-            //Może robić problemy
-            if(this.contentPart <= (int) Math.ceil(this.data.length/247)) {
-                this.generateSecondaryAdvertisement();
-                this.mode = Mode.SECONDARY;
-            } else {
-                this.mode = Mode.FINISHED;
-                this.contentPart = 0;
-            }
-        }*/
-    }
-
-    @Override
-    public void run() {
-
-    }
-
-    void secondaryAdvertise() {
-        /*System.out.println(Simulation.World.getTime() + " " + this.primary.time);
-        if(Simulation.World.getTime()-Simulation.World.timeStep/2 <= this.primary.time && Simulation.World.getTime()+Simulation.World.timeStep/2 >= this.primary.time) {
-            Simulation.World.channels[this.primary.channel].setPayload(this.secondary);
-            this.mode = Mode.ADVERTISE;
-            this.generatePrimaryAdvertisement();
-        }*/
-    }
-
     void secondaryListen() {
+        //TODO To jest bardzo dobre pytanie? Dlaczego poniższa linia jest potrzebna? Może też być w else i wciąż działa, pytanie dlaczego?
+        System.out.print("");
         if(!Simulation.World.channels[this.receivedAdvertisement.channel].empty) {
             SecondaryMessage currentMessage = (SecondaryMessage) Simulation.World.channels[this.receivedAdvertisement.channel].getPayload();
-            for (byte b :
-                    currentMessage.content) {
-                System.out.print(b + " ");
+            for (byte b : currentMessage.content) {
+                this.receivedData.add(b);
             }
-            System.out.println();
             this.mode = Mode.SCAN;
+            if(currentMessage.lastMessage) {
+                this.mode = Mode.FINISHED;
+                System.out.println(this.receivedData.toString());
+            }
         }
     }
 
     void generatePrimaryAdvertisement() {
-        /*this.advertiseCounter = 0;
-        this.primary = new PrimaryExtendedMessage(this.rand.nextInt(100), this.deviceID, this.rand.nextInt(37), Simulation.World.getTime()+(this.advertiseFor+2)*Simulation.World.timeStep);*/
+        this.advertiseCounter = 0;
+        //TODO Jaki ma ten czas tutaj generwoać, za ile nada
+        this.primary = new PrimaryExtendedMessage(this.rand.nextInt(), this.deviceID, this.rand.nextInt(37), System.nanoTime()+1000);
     }
     void generateSecondaryAdvertisement() {
+        this.advertiseCounter = 0;
         int numberOfParts = (int) Math.ceil(this.data.length/247);
         ByteBuffer buffer;
-        if(this.contentPart == numberOfParts) buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*247, this.data.length));
-        else buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*247, (this.contentPart+1)*247));
-        this.secondary = new SecondaryMessage(this.rand.nextInt(100),this.deviceID,buffer.array());
+        if(this.contentPart == numberOfParts) {
+            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*247, this.data.length));
+            this.secondary = new SecondaryMessage(this.rand.nextInt(),this.deviceID,buffer.array(), true);
+            for (byte datum : this.data) {
+                System.out.print(datum + ", ");
+            }
+            System.out.println();
+        }
+        else {
+            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*247, (this.contentPart+1)*247));
+            this.secondary = new SecondaryMessage(this.rand.nextInt(),this.deviceID,buffer.array());
+        }
         this.contentPart++;
     }
 }

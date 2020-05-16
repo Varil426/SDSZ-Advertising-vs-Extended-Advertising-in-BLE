@@ -10,7 +10,8 @@ public class Simulation {
         for (int i = 0; i < World.numberOfChannels; i++) {
             World.channels[i] = new Channel(i);
         }
-        //TODO
+        //Legacy
+        System.out.println("Legacy");
         LegacyDevice a = new LegacyDevice(0);
         a.generateContent();
         System.out.println(a.data.length);
@@ -28,5 +29,27 @@ public class Simulation {
             e.printStackTrace();
         }
         System.out.println("DONE");
+
+        //Extended
+        System.out.println("Extended");
+        ExtendedDevice c = new ExtendedDevice(0);
+        c.generateContent();
+        c.generatePrimaryAdvertisement();
+        System.out.println(c.data.length);
+        c.mode = Device.Mode.ADVERTISE;
+        ExtendedDevice d = new ExtendedDevice(1);
+        d.mode = Device.Mode.SCAN;
+        //Run threads
+        c.start();
+        d.start();
+        //Join threads
+        try {
+            c.join();
+            d.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("DONE");
+
     }
 }

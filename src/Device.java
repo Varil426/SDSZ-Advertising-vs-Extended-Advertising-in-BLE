@@ -47,10 +47,11 @@ public abstract class Device extends Thread {
     abstract void advertise();
     abstract public void run();
     void generateContent() {
-        //this.data = new byte[rand.nextInt(2550)];
-        this.data = new byte[343];
+        this.data = new byte[rand.nextInt(2550)];
+        //this.data = new byte[343];
         rand.nextBytes(this.data);
     }
+    //TODO Put removeOldMessages to use
     void removeOldMessages() {
         for (int i = 0; i < this.receivedMessages.size(); i++) {
             if(this.receivedMessages.get(i).getR() + 1000000 <= System.nanoTime()) {
