@@ -11,6 +11,7 @@ public class Channel {
 
     void setPayload(Message payload, long TTLinNS) {
         //TODO Konflikt w powietrzu - jeżeli chcemy ustawić nową wiadomość, a stara jeszcze jest aktywna
+        //TODO Synchronizacja na obiekcie
         this.payload = payload;
         this.empty = false;
         this.payloadArrivalTime = System.nanoTime();

@@ -10,9 +10,9 @@ public class LegacyDevice extends Device {
     }
     @Override
     void scan() {
-        for (int i = Simulation.World.numberOfChannels-3; i < Simulation.World.numberOfChannels; i++) {
-            if(!Simulation.World.channels[i].empty) {
-                Message currentMessage = Simulation.World.channels[i].getPayload();
+        for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
+            if(!World.getInstance().channels[i].empty) {
+                Message currentMessage = World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryLegacyMessage))continue;
                 boolean newMessage = true;
                 if(!this.receivedMessages.isEmpty()) {
@@ -46,7 +46,12 @@ public class LegacyDevice extends Device {
         //Multiply by 1000000 to get time to sent in nanoseconds
         long tmp = (long) Math.ceil((32*1000000)/1048576);
         if(this.advertiseFor > this.advertiseCounter) {
-            Simulation.World.channels[37+this.advertiseCounter %3].setPayload(this.message, tmp);
+            int randChannel = this.rand.nextInt(3) + 37;
+            while (this.advertisedOn.contains(randChannel)) {
+                randChannel = this.rand.nextInt(3) + 37;
+            }
+            this.advertisedOn.add(randChannel);
+            World.getInstance().channels[randChannel].setPayload(this.message, tmp);
             try {
                 sleep(0, (int) tmp);
             } catch (InterruptedException e) {
@@ -89,6 +94,7 @@ public class LegacyDevice extends Device {
 
     void generateAdvertisement() {
         this.advertiseCounter = 0;
+        this.advertisedOn.clear();
         int numberOfParts = (int) Math.ceil(this.data.length/23);
         ByteBuffer buffer;
         try {

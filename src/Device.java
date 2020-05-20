@@ -22,9 +22,10 @@ public abstract class Device extends Thread {
     ArrayList<Byte> receivedData = new ArrayList<>();
     //ArrayList<Message> receivedMessages;
     ArrayList<Pair<Message, Long>> receivedMessages;
+    ArrayList<Integer> advertisedOn = new ArrayList<>();
     //Number of advertise actions
     int advertiseCounter = 0;
-    int advertiseFor = 6;
+    int advertiseFor = 3;
     enum Mode {
         WAIT,
         SCAN,

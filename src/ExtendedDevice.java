@@ -39,10 +39,17 @@ public class ExtendedDevice extends Device {
 
     @Override
     void advertise() {
+        //TODO print wrócił i dalej pomaga, ale czemu
+        System.out.print("");
         //TODO tmp zmienić żeby brało pod uwagę rozmiar wiadomości a nie stałe
         long tmp = (long) Math.ceil(32000000/1048576);
         if(this.advertiseFor > this.advertiseCounter && this.contentPart <= (int) Math.ceil(this.data.length/247)) {
-            Simulation.World.channels[37+this.advertiseCounter %3].setPayload(this.primary, tmp);
+            int randChannel = this.rand.nextInt(3) + 37;
+            while (this.advertisedOn.contains(randChannel)) {
+                randChannel = this.rand.nextInt(3) + 37;
+            }
+            this.advertisedOn.add(randChannel);
+            World.getInstance().channels[randChannel].setPayload(this.primary, tmp);
             try {
                 sleep(0, (int) tmp);
             } catch (InterruptedException e) {
@@ -62,10 +69,9 @@ public class ExtendedDevice extends Device {
     }
 
     void secondaryAdvertise() {
-        //TODO Czy zostawic to advertiseFor?
-        if(System.nanoTime() >= this.primary.time && this.advertiseCounter < this.advertiseFor) {
+        if(System.nanoTime() >= this.primary.time && this.advertiseCounter < 1) {
             long tmp = (long) Math.ceil((255 * 1000000)/1048576);
-            Simulation.World.channels[this.primary.channel].setPayload(this.secondary, tmp);
+            World.getInstance().channels[this.primary.channel].setPayload(this.secondary, tmp);
             try {
                 sleep(0, (int) tmp);
             } catch (InterruptedException e) {
@@ -80,9 +86,9 @@ public class ExtendedDevice extends Device {
 
     @Override
     void scan() {
-        for (int i = Simulation.World.numberOfChannels-3; i < Simulation.World.numberOfChannels; i++) {
-            if(!Simulation.World.channels[i].empty) {
-                Message currentMessage = Simulation.World.channels[i].getPayload();
+        for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
+            if(!World.getInstance().channels[i].empty) {
+                Message currentMessage = World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryExtendedMessage))continue;
                 boolean newMessage = true;
                 if(!this.receivedMessages.isEmpty()) {
@@ -104,10 +110,8 @@ public class ExtendedDevice extends Device {
     }
 
     void secondaryListen() {
-        //TODO To jest bardzo dobre pytanie? Dlaczego poniższa linia jest potrzebna? Może też być w else i wciąż działa, pytanie dlaczego?
-        System.out.print("");
-        if(!Simulation.World.channels[this.receivedAdvertisement.channel].empty) {
-            SecondaryMessage currentMessage = (SecondaryMessage) Simulation.World.channels[this.receivedAdvertisement.channel].getPayload();
+        if(!World.getInstance().channels[this.receivedAdvertisement.channel].empty) {
+            SecondaryMessage currentMessage = (SecondaryMessage) World.getInstance().channels[this.receivedAdvertisement.channel].getPayload();
             for (byte b : currentMessage.content) {
                 this.receivedData.add(b);
             }
@@ -121,7 +125,12 @@ public class ExtendedDevice extends Device {
 
     void generatePrimaryAdvertisement() {
         this.advertiseCounter = 0;
-        //TODO Jaki ma ten czas tutaj generwoać, za ile nada
+        this.advertisedOn.clear();
+        try {
+            sleep(20);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         this.primary = new PrimaryExtendedMessage(this.rand.nextInt(), this.deviceID, this.rand.nextInt(37), System.nanoTime()+1000);
     }
     void generateSecondaryAdvertisement() {
@@ -131,10 +140,6 @@ public class ExtendedDevice extends Device {
         if(this.contentPart == numberOfParts) {
             buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*247, this.data.length));
             this.secondary = new SecondaryMessage(this.rand.nextInt(),this.deviceID,buffer.array(), true);
-            for (byte datum : this.data) {
-                System.out.print(datum + ", ");
-            }
-            System.out.println();
         }
         else {
             buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*247, (this.contentPart+1)*247));

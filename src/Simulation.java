@@ -1,15 +1,10 @@
 public class Simulation {
-    static class World {
-        static private long worldStartTime = System.nanoTime();
-        static int numberOfChannels = 40;
-        static Channel[] channels = new Channel[numberOfChannels];
-    }
-
     public static void main(String[] args) {
         //Set simulation stage
-        for (int i = 0; i < World.numberOfChannels; i++) {
-            World.channels[i] = new Channel(i);
+        for (int i = 0; i < World.getInstance().numberOfChannels; i++) {
+            World.getInstance().channels[i] = new Channel(i);
         }
+        World world = World.getInstance();
         //Legacy
         System.out.println("Legacy");
         LegacyDevice a = new LegacyDevice(0);
@@ -40,6 +35,10 @@ public class Simulation {
         c.mode = Device.Mode.ADVERTISE;
         ExtendedDevice d = new ExtendedDevice(1);
         d.mode = Device.Mode.SCAN;
+        for (byte datum : c.data) {
+            System.out.print(datum + ", ");
+        }
+        System.out.println();
         //Run threads
         c.start();
         d.start();
