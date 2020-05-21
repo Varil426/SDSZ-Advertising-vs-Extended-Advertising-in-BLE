@@ -8,10 +8,13 @@ public class LegacyDevice extends Device {
     LegacyDevice(int deviceID) {
         super(deviceID);
     }
+    LegacyDevice(int deviceID, long advertiseBreak) {
+        super(deviceID, advertiseBreak);
+    }
     @Override
     void scan() {
         for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
-            if(!World.getInstance().channels[i].empty) {
+            if(!World.getInstance().channels[i].isEmpty()) {
                 Message currentMessage = World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryLegacyMessage))continue;
                 boolean newMessage = true;
@@ -74,6 +77,13 @@ public class LegacyDevice extends Device {
 
     @Override
     public void run() {
+        if(this.mode != Mode.SCAN) {
+            try {
+                sleep(0,this.rand.nextInt(1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         while (this.mode != Mode.FINISHED) {
             switch (this.mode) {
                 case SCAN:
@@ -98,7 +108,7 @@ public class LegacyDevice extends Device {
         int numberOfParts = (int) Math.ceil(this.data.length/23);
         ByteBuffer buffer;
         try {
-            sleep(20);
+            sleep(this.advertiseBreak, this.rand.nextInt(500));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

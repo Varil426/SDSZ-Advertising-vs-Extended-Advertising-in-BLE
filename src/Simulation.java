@@ -5,6 +5,7 @@ public class Simulation {
             World.getInstance().channels[i] = new Channel(i);
         }
         World world = World.getInstance();
+
         //Legacy
         System.out.println("Legacy");
         LegacyDevice a = new LegacyDevice(0);
@@ -26,9 +27,13 @@ public class Simulation {
         }
         System.out.println("DONE");
 
+        for (Channel channel : World.getInstance().channels) {
+            channel.clearPayload();
+        }
+
         //Extended
         System.out.println("Extended");
-        ExtendedDevice c = new ExtendedDevice(0);
+        ExtendedDevice c = new ExtendedDevice(0, 100);
         c.generateContent();
         c.generatePrimaryAdvertisement();
         System.out.println(c.data.length);

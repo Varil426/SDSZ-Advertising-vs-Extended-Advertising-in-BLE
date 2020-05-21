@@ -18,14 +18,14 @@ public abstract class Device extends Thread {
     int deviceID;
     Random rand = new Random();
     byte[] data;
-    //TODO receivedData zastanowić się
     ArrayList<Byte> receivedData = new ArrayList<>();
-    //ArrayList<Message> receivedMessages;
     ArrayList<Pair<Message, Long>> receivedMessages;
     ArrayList<Integer> advertisedOn = new ArrayList<>();
     //Number of advertise actions
     int advertiseCounter = 0;
     int advertiseFor = 3;
+    //Advertising break period from 20 ms to 10 min
+    long advertiseBreak;
     enum Mode {
         WAIT,
         SCAN,
@@ -39,10 +39,18 @@ public abstract class Device extends Thread {
         this.deviceID = 0;
         this.position = new double[]{0.0, 0.0};
         this.receivedMessages = new ArrayList<Pair<Message,Long>>();
+        this.advertiseBreak = 20;
     }
     Device(int deviceID) {
         this();
         this.deviceID = deviceID;
+    }
+    Device(int deviceID, long advertiseBreak) {
+        this();
+        this.deviceID = deviceID;
+        if(advertiseBreak < 20) this.advertiseBreak = 20;
+        else if (advertiseBreak > 10*60*1000) this.advertiseBreak = 10*60*1000;
+        else this.advertiseBreak = advertiseBreak;
     }
     abstract void scan();
     abstract void advertise();

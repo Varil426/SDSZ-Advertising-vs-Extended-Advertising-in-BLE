@@ -10,9 +10,19 @@ public class ExtendedDevice extends Device {
     ExtendedDevice(int deviceID) {
         super(deviceID);
     }
+    ExtendedDevice(int deviceID, long advertiseBreak) {
+        super(deviceID, advertiseBreak);
+    }
 
     @Override
     public void run() {
+        if(this.mode != Mode.SCAN) {
+            try {
+                sleep(0,this.rand.nextInt(1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         while (this.mode != Mode.FINISHED) {
             switch (this.mode) {
                 case WAIT:
@@ -39,9 +49,7 @@ public class ExtendedDevice extends Device {
 
     @Override
     void advertise() {
-        //TODO print wrócił i dalej pomaga, ale czemu
-        System.out.print("");
-        //TODO tmp zmienić żeby brało pod uwagę rozmiar wiadomości a nie stałe
+        //32 * 1000000 - primary payload size is const 32 bytes, times 1000000 to get time in nanoseconds
         long tmp = (long) Math.ceil(32000000/1048576);
         if(this.advertiseFor > this.advertiseCounter && this.contentPart <= (int) Math.ceil(this.data.length/247)) {
             int randChannel = this.rand.nextInt(3) + 37;
@@ -70,7 +78,8 @@ public class ExtendedDevice extends Device {
 
     void secondaryAdvertise() {
         if(System.nanoTime() >= this.primary.time && this.advertiseCounter < 1) {
-            long tmp = (long) Math.ceil((255 * 1000000)/1048576);
+            //Secondary payload size times 1000000 to get time in nanoseconds
+            long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000000)/1048576);
             World.getInstance().channels[this.primary.channel].setPayload(this.secondary, tmp);
             try {
                 sleep(0, (int) tmp);
@@ -87,7 +96,7 @@ public class ExtendedDevice extends Device {
     @Override
     void scan() {
         for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
-            if(!World.getInstance().channels[i].empty) {
+            if(!World.getInstance().channels[i].isEmpty()) {
                 Message currentMessage = World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryExtendedMessage))continue;
                 boolean newMessage = true;
@@ -110,7 +119,7 @@ public class ExtendedDevice extends Device {
     }
 
     void secondaryListen() {
-        if(!World.getInstance().channels[this.receivedAdvertisement.channel].empty) {
+        if(!World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty()) {
             SecondaryMessage currentMessage = (SecondaryMessage) World.getInstance().channels[this.receivedAdvertisement.channel].getPayload();
             for (byte b : currentMessage.content) {
                 this.receivedData.add(b);
@@ -127,7 +136,7 @@ public class ExtendedDevice extends Device {
         this.advertiseCounter = 0;
         this.advertisedOn.clear();
         try {
-            sleep(20);
+            sleep(this.advertiseBreak,this.rand.nextInt(500));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

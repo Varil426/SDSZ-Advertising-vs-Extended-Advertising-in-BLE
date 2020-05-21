@@ -18,8 +18,17 @@ public class Channel {
         this.fullUntil = this.payloadArrivalTime + TTLinNS;
     }
 
+    boolean isEmpty() {
+        //TODO Usuwanie danych od razu powoduje problemy, dużo paczek jest pomijanych
+        /*if(!this.empty && this.fullUntil - System.nanoTime() < 0) {
+            this.clearPayload();
+            this.empty = true;
+        }*/
+        return this.empty;
+    }
+
     Message getPayload() {
-        return payload;
+        return this.payload;
     }
 
     void clearPayload() {
