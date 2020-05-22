@@ -13,7 +13,7 @@ public class ExtendedDevice extends Device {
     ExtendedDevice(int deviceID, long advertiseBreak) {
         super(deviceID, advertiseBreak);
     }
-
+    ExtendedDevice(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize){ super(deviceID, advertiseBreak, deviceToListenTo, dataSize);}
     @Override
     public void run() {
         if(this.mode != Mode.SCAN) {
@@ -98,7 +98,7 @@ public class ExtendedDevice extends Device {
         for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
             if(!World.getInstance().channels[i].isEmpty()) {
                 Message currentMessage = World.getInstance().channels[i].getPayload();
-                if(!(currentMessage instanceof PrimaryExtendedMessage))continue;
+                if(!(currentMessage instanceof PrimaryExtendedMessage) || (this.deviceToListenTo != null && currentMessage.senderID != this.deviceToListenTo))continue;
                 boolean newMessage = true;
                 if(!this.receivedMessages.isEmpty()) {
                     for (Pair m : this.receivedMessages) {

@@ -1,4 +1,4 @@
-public class Simulation {
+public class MultiDeviceCommunicationTestingLegacy {
     public static void main(String[] args) {
         //Set simulation stage
         for (int i = 0; i < World.getInstance().numberOfChannels; i++) {
@@ -11,47 +11,35 @@ public class Simulation {
         LegacyDevice a = new LegacyDevice(0, 20, -1, 1024);
         a.generateContent();
         a.generateAdvertisement();
-        System.out.println(a.data.length);
         a.mode = Device.Mode.ADVERTISE;
-        LegacyDevice b = new LegacyDevice(1, 20, 0, 1024);
+
+        LegacyDevice c = new LegacyDevice(1, 20, -1, 1024);
+        c.generateContent();
+        c.generateAdvertisement();
+        c.mode = Device.Mode.ADVERTISE;
+
+        LegacyDevice b = new LegacyDevice(2, 20, 0, 1024);
         b.mode = Device.Mode.SCAN;
+
+        LegacyDevice d = new LegacyDevice(3, 20, 1, 1024);
+        d.mode = Device.Mode.SCAN;
+
         //Run threads
         a.start();
+        c.start();
         b.start();
+        d.start();
         //Join threads
         try {
             a.join();
             b.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("DONE");
-
-        for (Channel channel : World.getInstance().channels) {
-            channel.clearPayload();
-        }
-
-        //Extended
-        System.out.println("Extended");
-        ExtendedDevice c = new ExtendedDevice(0, 20, -1, 1024);
-        c.generateContent();
-        c.generatePrimaryAdvertisement();
-        System.out.println(c.data.length);
-        c.mode = Device.Mode.ADVERTISE;
-        ExtendedDevice d = new ExtendedDevice(1, 20, 0, 1024);
-        d.mode = Device.Mode.SCAN;
-        System.out.println();
-        //Run threads
-        c.start();
-        d.start();
-        //Join threads
-        try {
             c.join();
             d.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println(b.receivedData.size());
+        System.out.println(d.receivedData.size());
         System.out.println("DONE");
-
     }
 }

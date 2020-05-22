@@ -2,6 +2,7 @@ public abstract class Message {
     int messageID;
     int senderID;
     boolean lastMessage = false;
+    byte[] content;
 
     public Message(int messageID, int senderID) {
         this.messageID = messageID;

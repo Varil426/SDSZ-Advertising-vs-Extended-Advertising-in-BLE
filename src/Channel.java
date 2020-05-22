@@ -1,6 +1,6 @@
 public class Channel {
     int id;
-    boolean empty = true;
+    private boolean empty = true;
     Message payload;
     long payloadArrivalTime;
     long fullUntil;

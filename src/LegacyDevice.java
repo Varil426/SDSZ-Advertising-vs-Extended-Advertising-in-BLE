@@ -2,7 +2,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class LegacyDevice extends Device {
-    //byte[] data = new byte[2550];
     PrimaryLegacyMessage message;
     int contentPart = 0;
     LegacyDevice(int deviceID) {
@@ -11,12 +10,13 @@ public class LegacyDevice extends Device {
     LegacyDevice(int deviceID, long advertiseBreak) {
         super(deviceID, advertiseBreak);
     }
+    LegacyDevice(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize){ super(deviceID, advertiseBreak, deviceToListenTo, dataSize);}
     @Override
     void scan() {
         for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
             if(!World.getInstance().channels[i].isEmpty()) {
                 Message currentMessage = World.getInstance().channels[i].getPayload();
-                if(!(currentMessage instanceof PrimaryLegacyMessage))continue;
+                if(!(currentMessage instanceof PrimaryLegacyMessage) || (this.deviceToListenTo != null && currentMessage.senderID != this.deviceToListenTo))continue;
                 boolean newMessage = true;
                 if(!this.receivedMessages.isEmpty()) {
                     for (Pair m : this.receivedMessages) {
@@ -66,10 +66,6 @@ public class LegacyDevice extends Device {
                 this.generateAdvertisement();
             } else {
                 this.mode = Mode.FINISHED;
-                for (byte b : this.data) {
-                    System.out.print(b + ", ");
-                }
-                System.out.println();
                 this.contentPart = 0;
             }
         }

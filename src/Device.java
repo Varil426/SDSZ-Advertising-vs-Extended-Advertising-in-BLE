@@ -17,6 +17,7 @@ public abstract class Device extends Thread {
     double[] position;
     int deviceID;
     Random rand = new Random();
+    int dataSize;
     byte[] data;
     ArrayList<Byte> receivedData = new ArrayList<>();
     ArrayList<Pair<Message, Long>> receivedMessages;
@@ -26,6 +27,7 @@ public abstract class Device extends Thread {
     int advertiseFor = 3;
     //Advertising break period from 20 ms to 10 min
     long advertiseBreak;
+    Integer deviceToListenTo;
     enum Mode {
         WAIT,
         SCAN,
@@ -40,6 +42,7 @@ public abstract class Device extends Thread {
         this.position = new double[]{0.0, 0.0};
         this.receivedMessages = new ArrayList<Pair<Message,Long>>();
         this.advertiseBreak = 20;
+        this.dataSize = 1024;
     }
     Device(int deviceID) {
         this();
@@ -52,13 +55,21 @@ public abstract class Device extends Thread {
         else if (advertiseBreak > 10*60*1000) this.advertiseBreak = 10*60*1000;
         else this.advertiseBreak = advertiseBreak;
     }
+    Device(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize) {
+        this(deviceID, advertiseBreak);
+        this.deviceToListenTo = deviceToListenTo;
+        this.dataSize = dataSize;
+    }
     abstract void scan();
     abstract void advertise();
     abstract public void run();
     void generateContent() {
-        this.data = new byte[rand.nextInt(2550)];
-        //this.data = new byte[343];
+        this.data = new byte[this.dataSize];
         rand.nextBytes(this.data);
+        for (byte b : this.data) {
+            System.out.print(b + ", ");
+        }
+        System.out.println();
     }
     //TODO Put removeOldMessages to use
     void removeOldMessages() {
