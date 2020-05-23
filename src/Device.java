@@ -66,8 +66,14 @@ public abstract class Device extends Thread {
     void generateContent() {
         this.data = new byte[this.dataSize];
         rand.nextBytes(this.data);
+        int k=0;
         for (byte b : this.data) {
             System.out.print(b + ", ");
+            k++;
+            if (k==247){
+                System.out.println();
+                k=0;
+            }
         }
         System.out.println();
     }

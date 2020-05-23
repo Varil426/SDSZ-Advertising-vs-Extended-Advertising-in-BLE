@@ -5,7 +5,7 @@ public class Simulation {
             World.getInstance().channels[i] = new Channel(i);
         }
         World world = World.getInstance();
-
+        /*
         //Legacy
         System.out.println("Legacy");
         LegacyDevice a = new LegacyDevice(0, 20, -1, 1024);
@@ -30,7 +30,7 @@ public class Simulation {
         for (Channel channel : World.getInstance().channels) {
             channel.clearPayload();
         }
-
+        */
         //Extended
         System.out.println("Extended");
         ExtendedDevice c = new ExtendedDevice(0, 20, -1, 1024);
@@ -40,10 +40,9 @@ public class Simulation {
         c.mode = Device.Mode.ADVERTISE;
         ExtendedDevice d = new ExtendedDevice(1, 20, 0, 1024);
         d.mode = Device.Mode.SCAN;
-        System.out.println();
         //Run threads
-        c.start();
         d.start();
+        c.start();
         //Join threads
         try {
             c.join();

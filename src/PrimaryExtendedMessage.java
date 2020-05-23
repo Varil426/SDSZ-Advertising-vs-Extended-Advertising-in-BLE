@@ -7,4 +7,14 @@ public class PrimaryExtendedMessage extends Message{
         this.channel = channel;
         this.time = time;
     }
+
+    @Override
+    public String toString() {
+        return "PrimaryExtendedMessage{" +
+                "messageID=" + messageID +
+                ", senderID=" + senderID +
+                ", channel=" + channel +
+                ", time=" + time +
+                '}';
+    }
 }

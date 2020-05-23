@@ -81,6 +81,7 @@ public class ExtendedDevice extends Device {
             //Secondary payload size times 1000000 to get time in nanoseconds
             long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000000)/1048576);
             World.getInstance().channels[this.primary.channel].setPayload(this.secondary, tmp);
+            System.out.println("Wrzuciłem sec");
             try {
                 sleep(0, (int) tmp);
             } catch (InterruptedException e) {
@@ -112,6 +113,7 @@ public class ExtendedDevice extends Device {
                 if(newMessage) {
                     this.receivedMessages.add(new Pair<Message, Long>(currentMessage, System.nanoTime()));
                     this.receivedAdvertisement = (PrimaryExtendedMessage) currentMessage;
+                    System.out.println("\nOdebrana: " + currentMessage.toString());
                     this.mode = Mode.LISTEN;
                 }
             }
@@ -119,15 +121,19 @@ public class ExtendedDevice extends Device {
     }
 
     void secondaryListen() {
-        if(!World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty()) {
+        if(System.nanoTime() >= this.receivedAdvertisement.time+50 && !World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty()) {
             SecondaryMessage currentMessage = (SecondaryMessage) World.getInstance().channels[this.receivedAdvertisement.channel].getPayload();
+            System.out.println("Odebrałem sec");
+            System.out.print(this.receivedAdvertisement.channel + "\t\t");
             for (byte b : currentMessage.content) {
                 this.receivedData.add(b);
+                System.out.print(b+", ");
             }
+            System.out.println();
             this.mode = Mode.SCAN;
             if(currentMessage.lastMessage) {
                 this.mode = Mode.FINISHED;
-                System.out.println(this.receivedData.toString());
+                //System.out.println(this.receivedData.toString());
             }
         }
     }
@@ -141,6 +147,7 @@ public class ExtendedDevice extends Device {
             e.printStackTrace();
         }
         this.primary = new PrimaryExtendedMessage(this.rand.nextInt(), this.deviceID, this.rand.nextInt(37), System.nanoTime()+1000);
+        System.out.println("\nWygenerowana: " + primary.toString());
     }
     void generateSecondaryAdvertisement() {
         this.advertiseCounter = 0;
