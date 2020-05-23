@@ -1,4 +1,5 @@
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.Arrays;
 
 public class LegacyDevice extends Device {
@@ -17,18 +18,8 @@ public class LegacyDevice extends Device {
             if(!World.getInstance().channels[i].isEmpty()) {
                 Message currentMessage = World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryLegacyMessage) || (this.deviceToListenTo != null && currentMessage.senderID != this.deviceToListenTo))continue;
-                boolean newMessage = true;
-                if(!this.receivedMessages.isEmpty()) {
-                    for (Pair m : this.receivedMessages) {
-                        Message myMessage = (Message) m.getL();
-                        if(myMessage.messageID == currentMessage.messageID && myMessage.senderID == currentMessage.senderID) {
-                            newMessage = false;
-                            break;
-                        }
-                    }
-                }
-                if(newMessage) {
-                    this.receivedMessages.add(new Pair<Message, Long>(currentMessage, System.nanoTime()));
+                if(this.isMessageNew(currentMessage)) {
+                    this.receivedMessages.add(new Pair<Message, Instant>(currentMessage, Instant.now()));
                     for (byte b : ((PrimaryLegacyMessage) currentMessage).content) {
                         //System.out.print(b + " ");
                         this.receivedData.add(b);
@@ -46,8 +37,8 @@ public class LegacyDevice extends Device {
     @Override
     void advertise() {
         //TODO tmp zmienić żeby brało pod uwagę rozmiar wiadomości a nie stałe
-        //Multiply by 1000000 to get time to sent in nanoseconds
-        long tmp = (long) Math.ceil((32*1000000)/1048576);
+        //Multiply by 1000000000 to get time to sent in nanoseconds
+        long tmp = (long) Math.ceil((32*1000000000)/1048576);
         if(this.advertiseFor > this.advertiseCounter) {
             int randChannel = this.rand.nextInt(3) + 37;
             while (this.advertisedOn.contains(randChannel)) {
@@ -56,7 +47,8 @@ public class LegacyDevice extends Device {
             this.advertisedOn.add(randChannel);
             World.getInstance().channels[randChannel].setPayload(this.message, tmp);
             try {
-                sleep(0, (int) tmp);
+                Pair<Long, Integer> time = this.getMillisAndNanos(tmp);
+                sleep(time.getL(), time.getR());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -75,7 +67,7 @@ public class LegacyDevice extends Device {
     public void run() {
         if(this.mode != Mode.SCAN) {
             try {
-                sleep(0,this.rand.nextInt(1000));
+                sleep(0,this.rand.nextInt(1000000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -104,7 +96,7 @@ public class LegacyDevice extends Device {
         int numberOfParts = (int) Math.ceil(this.data.length/23);
         ByteBuffer buffer;
         try {
-            sleep(this.advertiseBreak, this.rand.nextInt(500));
+            sleep(this.advertiseBreak, this.rand.nextInt(500000));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

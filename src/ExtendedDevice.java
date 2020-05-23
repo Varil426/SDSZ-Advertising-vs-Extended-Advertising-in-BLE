@@ -1,4 +1,5 @@
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.Arrays;
 
 public class ExtendedDevice extends Device {
@@ -17,8 +18,9 @@ public class ExtendedDevice extends Device {
     @Override
     public void run() {
         if(this.mode != Mode.SCAN) {
+            //Generate up to 1 ms delay to avoid cancelling out of signals
             try {
-                sleep(0,this.rand.nextInt(1000));
+                sleep(0,this.rand.nextInt(1000000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -49,8 +51,8 @@ public class ExtendedDevice extends Device {
 
     @Override
     void advertise() {
-        //32 * 1000000 - primary payload size is const 32 bytes, times 1000000 to get time in nanoseconds
-        long tmp = (long) Math.ceil(32000000/1048576);
+        //32 * 1000000000 - primary payload size is const 32 bytes, times 1000000000 to get time in nanoseconds
+        long tmp = (long) Math.ceil(32000000/1048576) * 100;
         if(this.advertiseFor > this.advertiseCounter && this.contentPart <= (int) Math.ceil(this.data.length/247)) {
             int randChannel = this.rand.nextInt(3) + 37;
             while (this.advertisedOn.contains(randChannel)) {
@@ -59,13 +61,13 @@ public class ExtendedDevice extends Device {
             this.advertisedOn.add(randChannel);
             World.getInstance().channels[randChannel].setPayload(this.primary, tmp);
             try {
-                sleep(0, (int) tmp);
+                Pair<Long, Integer> time = this.getMillisAndNanos(tmp);
+                sleep(time.getL(), time.getR());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             this.advertiseCounter++;
         } else {
-            //Może robić problemy
             if(this.contentPart <= (int) Math.ceil(this.data.length/247)) {
                 this.generateSecondaryAdvertisement();
                 this.mode = Mode.SECONDARY;
@@ -77,12 +79,14 @@ public class ExtendedDevice extends Device {
     }
 
     void secondaryAdvertise() {
-        if(System.nanoTime() >= this.primary.time && this.advertiseCounter < 1) {
-            //Secondary payload size times 1000000 to get time in nanoseconds
-            long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000000)/1048576);
+        if(Instant.now().isAfter(this.primary.timeForSecondary) && this.advertiseCounter < 1) {
+            //Secondary payload size times 1000000000 to get time in nanoseconds
+            //TODO Smieszna kolejność działń potrzebna, żeby nie pojawiły się błędy numeryczne. Może przejść na makrosekundy
+            long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000000)/1048576)*100;
             World.getInstance().channels[this.primary.channel].setPayload(this.secondary, tmp);
             try {
-                sleep(0, (int) tmp);
+                Pair<Long, Integer> time = this.getMillisAndNanos(tmp);
+                sleep(time.getL(), time.getR());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -99,18 +103,8 @@ public class ExtendedDevice extends Device {
             if(!World.getInstance().channels[i].isEmpty()) {
                 Message currentMessage = World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryExtendedMessage) || (this.deviceToListenTo != null && currentMessage.senderID != this.deviceToListenTo))continue;
-                boolean newMessage = true;
-                if(!this.receivedMessages.isEmpty()) {
-                    for (Pair m : this.receivedMessages) {
-                        Message myMessage = (Message) m.getL();
-                        if(myMessage.messageID == currentMessage.messageID && myMessage.senderID == currentMessage.senderID) {
-                            newMessage = false;
-                            break;
-                        }
-                    }
-                }
-                if(newMessage) {
-                    this.receivedMessages.add(new Pair<Message, Long>(currentMessage, System.nanoTime()));
+                if(this.isMessageNew(currentMessage)) {
+                    this.receivedMessages.add(new Pair<Message, Instant>(currentMessage, Instant.now()));
                     this.receivedAdvertisement = (PrimaryExtendedMessage) currentMessage;
                     this.mode = Mode.LISTEN;
                 }
@@ -119,28 +113,35 @@ public class ExtendedDevice extends Device {
     }
 
     void secondaryListen() {
-        if(!World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty()) {
+        if(!World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() && this.deviceToListenTo == World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) {
             SecondaryMessage currentMessage = (SecondaryMessage) World.getInstance().channels[this.receivedAdvertisement.channel].getPayload();
-            for (byte b : currentMessage.content) {
-                this.receivedData.add(b);
-            }
-            this.mode = Mode.SCAN;
-            if(currentMessage.lastMessage) {
-                this.mode = Mode.FINISHED;
-                System.out.println(this.receivedData.toString());
+            if(this.isMessageNew(currentMessage)) {
+                for (byte b : currentMessage.content) {
+                    this.receivedData.add(b);
+                }
+                this.mode = Mode.SCAN;
+                if(currentMessage.lastMessage) {
+                    this.mode = Mode.FINISHED;
+                    System.out.println(this.receivedData.toString());
+                }
             }
         }
+        //TODO To przerobić
+        /*if((World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() || this.deviceToListenTo != World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) && this.receivedAdvertisement.timeForSecondary.plusMillis(2).isBefore(Instant.now())) {
+            this.mode = Mode.FINISHED;
+            System.out.println("No nie przyszła");
+        }*/
     }
 
     void generatePrimaryAdvertisement() {
         this.advertiseCounter = 0;
         this.advertisedOn.clear();
         try {
-            sleep(this.advertiseBreak,this.rand.nextInt(500));
+            sleep(this.advertiseBreak,this.rand.nextInt(500000));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        this.primary = new PrimaryExtendedMessage(this.rand.nextInt(), this.deviceID, this.rand.nextInt(37), System.nanoTime()+1000);
+        this.primary = new PrimaryExtendedMessage(this.rand.nextInt(), this.deviceID, this.rand.nextInt(37), Instant.now().plusMillis(1));
     }
     void generateSecondaryAdvertisement() {
         this.advertiseCounter = 0;

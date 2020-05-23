@@ -1,10 +1,12 @@
+import java.time.Instant;
+
 public class PrimaryExtendedMessage extends Message{
     int channel;
-    long time;
+    Instant timeForSecondary;
 
-    public PrimaryExtendedMessage(int messageID, int senderID, int channel, long time) {
+    public PrimaryExtendedMessage(int messageID, int senderID, int channel, Instant timeForSecondary) {
         super(messageID, senderID);
         this.channel = channel;
-        this.time = time;
+        this.timeForSecondary = timeForSecondary;
     }
 }

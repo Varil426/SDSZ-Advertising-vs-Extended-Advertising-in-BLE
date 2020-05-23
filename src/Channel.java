@@ -1,9 +1,11 @@
+import java.time.Instant;
+
 public class Channel {
     int id;
     private boolean empty = true;
     Message payload;
-    long payloadArrivalTime;
-    long fullUntil;
+    Instant payloadArrivalTime;
+    Instant fullUntil;
 
     Channel(int id) {
         this.id = id;
@@ -14,13 +16,13 @@ public class Channel {
         //TODO Synchronizacja na obiekcie
         this.payload = payload;
         this.empty = false;
-        this.payloadArrivalTime = System.nanoTime();
-        this.fullUntil = this.payloadArrivalTime + TTLinNS;
+        this.payloadArrivalTime = Instant.now();
+        this.fullUntil = this.payloadArrivalTime.plusNanos(TTLinNS);
     }
 
     boolean isEmpty() {
         //TODO Usuwanie danych od razu powoduje problemy, dużo paczek jest pomijanych
-        /*if(!this.empty && this.fullUntil - System.nanoTime() < 0) {
+        /*if(!this.empty && this.fullUntil.isBefore(Instant.now())) {
             this.clearPayload();
             this.empty = true;
         }*/

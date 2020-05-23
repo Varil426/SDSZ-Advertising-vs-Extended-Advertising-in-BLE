@@ -1,3 +1,4 @@
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -20,7 +21,7 @@ public abstract class Device extends Thread {
     int dataSize;
     byte[] data;
     ArrayList<Byte> receivedData = new ArrayList<>();
-    ArrayList<Pair<Message, Long>> receivedMessages;
+    ArrayList<Pair<Message, Instant>> receivedMessages;
     ArrayList<Integer> advertisedOn = new ArrayList<>();
     //Number of advertise actions
     int advertiseCounter = 0;
@@ -40,7 +41,7 @@ public abstract class Device extends Thread {
     Device(){
         this.deviceID = 0;
         this.position = new double[]{0.0, 0.0};
-        this.receivedMessages = new ArrayList<Pair<Message,Long>>();
+        this.receivedMessages = new ArrayList<Pair<Message, Instant>>();
         this.advertiseBreak = 20;
         this.dataSize = 1024;
     }
@@ -71,10 +72,27 @@ public abstract class Device extends Thread {
         }
         System.out.println();
     }
+    boolean isMessageNew(Message receivedMessage) {
+        if(!this.receivedMessages.isEmpty()) {
+            for (Pair m : this.receivedMessages) {
+                Message myMessage = (Message) m.getL();
+                if(myMessage.messageID == receivedMessage.messageID && myMessage.senderID == receivedMessage.senderID) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    Pair<Long, Integer> getMillisAndNanos(long number) {
+        long millis = (long) Math.floor(number/1000000);
+        int nanos = (int) number%1000000;
+        return new Pair<>(millis, nanos);
+    }
     //TODO Put removeOldMessages to use
     void removeOldMessages() {
         for (int i = 0; i < this.receivedMessages.size(); i++) {
-            if(this.receivedMessages.get(i).getR() + 1000000 <= System.nanoTime()) {
+            //Remove messages older than 10 ms
+            if(this.receivedMessages.get(i).getR().isBefore(Instant.now().plusNanos(10000000))) {
                 this.receivedMessages.remove(i);
                 i--;
             }
