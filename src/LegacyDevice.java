@@ -38,7 +38,7 @@ public class LegacyDevice extends Device {
     void advertise() {
         //TODO tmp zmienić żeby brało pod uwagę rozmiar wiadomości a nie stałe
         //Multiply by 1000000000 to get time to sent in nanoseconds
-        long tmp = (long) Math.ceil((32*1000000000)/1048576);
+        long tmp = (long) Math.ceil((32*1000)/1048576)*1000000;
         if(this.advertiseFor > this.advertiseCounter) {
             int randChannel = this.rand.nextInt(3) + 37;
             while (this.advertisedOn.contains(randChannel)) {

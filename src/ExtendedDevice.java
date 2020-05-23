@@ -82,7 +82,7 @@ public class ExtendedDevice extends Device {
         if(Instant.now().isAfter(this.primary.timeForSecondary) && this.advertiseCounter < 1) {
             //Secondary payload size times 1000000000 to get time in nanoseconds
             //TODO Smieszna kolejność działń potrzebna, żeby nie pojawiły się błędy numeryczne. Może przejść na makrosekundy
-            long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000000)/1048576)*100;
+            long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000)/1048576)*100000;
             World.getInstance().channels[this.primary.channel].setPayload(this.secondary, tmp);
             try {
                 Pair<Long, Integer> time = this.getMillisAndNanos(tmp);
@@ -119,6 +119,7 @@ public class ExtendedDevice extends Device {
                 for (byte b : currentMessage.content) {
                     this.receivedData.add(b);
                 }
+                this.receivedMessages.add(new Pair<Message, Instant>(currentMessage, Instant.now()));
                 this.mode = Mode.SCAN;
                 if(currentMessage.lastMessage) {
                     this.mode = Mode.FINISHED;
@@ -127,7 +128,7 @@ public class ExtendedDevice extends Device {
             }
         }
         //TODO To przerobić
-        /*if((World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() || this.deviceToListenTo != World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) && this.receivedAdvertisement.timeForSecondary.plusMillis(2).isBefore(Instant.now())) {
+        /*if((World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() || this.deviceToListenTo != World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) && this.receivedAdvertisement.timeForSecondary.plusMillis(100).isBefore(Instant.now())) {
             this.mode = Mode.FINISHED;
             System.out.println("No nie przyszła");
         }*/
