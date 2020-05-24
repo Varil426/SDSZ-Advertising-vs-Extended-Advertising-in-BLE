@@ -8,12 +8,12 @@ public class MultiDeviceCommunicationTestingLegacy {
 
         //Legacy
         System.out.println("Legacy");
-        LegacyDevice a = new LegacyDevice(0, 20, -1, 1024);
+        LegacyDevice a = new LegacyDevice(0, 20, -1, 5096);
         a.generateContent();
         a.generateAdvertisement();
         a.mode = Device.Mode.ADVERTISE;
 
-        LegacyDevice c = new LegacyDevice(1, 20, -1, 1024);
+        LegacyDevice c = new LegacyDevice(1, 20, -1, 5096);
         c.generateContent();
         c.generateAdvertisement();
         c.mode = Device.Mode.ADVERTISE;
@@ -25,6 +25,7 @@ public class MultiDeviceCommunicationTestingLegacy {
         d.mode = Device.Mode.SCAN;
 
         //Run threads
+        long start = System.nanoTime();
         a.start();
         c.start();
         b.start();
@@ -38,8 +39,9 @@ public class MultiDeviceCommunicationTestingLegacy {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(b.receivedData.size());
-        System.out.println(d.receivedData.size());
+        System.out.println("Received payload size: " + b.receivedData.size());
+        System.out.println("Received payload size: " + d.receivedData.size());
         System.out.println("DONE");
+        System.out.println("Time: " + Math.abs(start - System.nanoTime())/1000000 + " ms");
     }
 }

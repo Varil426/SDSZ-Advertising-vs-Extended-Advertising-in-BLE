@@ -99,11 +99,13 @@ public class ExtendedDevice extends Device {
 
     @Override
     void scan() {
+        this.scanningCheck();
         for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
-            if(!World.getInstance().channels[i].isEmpty()) {
+            if(!World.getInstance().channels[i].isEmpty() && !World.getInstance().channels[i].inAirConflict) {
                 Message currentMessage = World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryExtendedMessage) || (this.deviceToListenTo != null && currentMessage.senderID != this.deviceToListenTo))continue;
                 if(this.isMessageNew(currentMessage)) {
+                    this.scanningSince = null;
                     this.receivedMessages.add(new Pair<Message, Instant>(currentMessage, Instant.now()));
                     this.receivedAdvertisement = (PrimaryExtendedMessage) currentMessage;
                     this.mode = Mode.LISTEN;
@@ -113,7 +115,7 @@ public class ExtendedDevice extends Device {
     }
 
     void secondaryListen() {
-        if(!World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() && this.deviceToListenTo == World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) {
+        if(!World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() && !World.getInstance().channels[this.receivedAdvertisement.channel].inAirConflict && this.deviceToListenTo == World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) {
             SecondaryMessage currentMessage = (SecondaryMessage) World.getInstance().channels[this.receivedAdvertisement.channel].getPayload();
             if(this.isMessageNew(currentMessage)) {
                 for (byte b : currentMessage.content) {
@@ -126,12 +128,12 @@ public class ExtendedDevice extends Device {
                     System.out.println(this.receivedData.toString());
                 }
             }
+            return;
         }
-        //TODO To przerobić
-        /*if((World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() || this.deviceToListenTo != World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) && this.receivedAdvertisement.timeForSecondary.plusMillis(100).isBefore(Instant.now())) {
-            this.mode = Mode.FINISHED;
-            System.out.println("No nie przyszła");
-        }*/
+        if((World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() || this.deviceToListenTo != World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) && this.receivedAdvertisement.timeForSecondary.plusMillis(50).isBefore(Instant.now())) {
+            this.mode = Mode.SCAN;
+            System.out.println("Secondary missed");
+        }
     }
 
     void generatePrimaryAdvertisement() {

@@ -5,16 +5,22 @@ public class Channel {
     private boolean empty = true;
     Message payload;
     Instant payloadArrivalTime;
-    Instant fullUntil;
+    Instant fullUntil = Instant.now();
+    boolean inAirConflict = false;
 
     Channel(int id) {
         this.id = id;
     }
 
-    void setPayload(Message payload, long TTLinNS) {
-        //TODO Konflikt w powietrzu - jeżeli chcemy ustawić nową wiadomość, a stara jeszcze jest aktywna
-        //TODO Synchronizacja na obiekcie
-        this.payload = payload;
+    synchronized void setPayload(Message payload, long TTLinNS) {
+        if(this.fullUntil.isBefore(Instant.now())) {
+            this.payload = payload;
+            this.inAirConflict = false;
+        } else {
+            System.out.println("In Air Conflict");
+            this.inAirConflict = true;
+            this.payload = null;
+        }
         this.empty = false;
         this.payloadArrivalTime = Instant.now();
         this.fullUntil = this.payloadArrivalTime.plusNanos(TTLinNS);
@@ -29,7 +35,7 @@ public class Channel {
         return this.empty;
     }
 
-    Message getPayload() {
+    synchronized Message getPayload() {
         return this.payload;
     }
 

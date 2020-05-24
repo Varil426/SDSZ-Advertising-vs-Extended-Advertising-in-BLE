@@ -8,12 +8,12 @@ public class MultiDeviceCommunicationTestingExtended {
 
         //Extended
         System.out.println("Extended");
-        ExtendedDevice a = new ExtendedDevice(0, 20, -1, 1024);
+        ExtendedDevice a = new ExtendedDevice(0, 20, -1, 5096);
         a.generateContent();
         a.generatePrimaryAdvertisement();
         a.mode = Device.Mode.ADVERTISE;
 
-        ExtendedDevice c = new ExtendedDevice(1, 20, -1, 1024);
+        ExtendedDevice c = new ExtendedDevice(1, 20, -1, 5096);
         c.generateContent();
         c.generatePrimaryAdvertisement();
         c.mode = Device.Mode.ADVERTISE;
@@ -24,6 +24,7 @@ public class MultiDeviceCommunicationTestingExtended {
         ExtendedDevice d = new ExtendedDevice(3, 20, 1, 1024);
         d.mode = Device.Mode.SCAN;
         //Run threads
+        long start = System.nanoTime();
         b.start();
         d.start();
         a.start();
@@ -37,8 +38,9 @@ public class MultiDeviceCommunicationTestingExtended {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(b.receivedData.size());
-        System.out.println(d.receivedData.size());
+        System.out.println("Received payload size: " + b.receivedData.size());
+        System.out.println("Received payload size: " + d.receivedData.size());
         System.out.println("DONE");
+        System.out.println("Time: " + Math.abs(start - System.nanoTime())/1000000 + " ms");
     }
 }

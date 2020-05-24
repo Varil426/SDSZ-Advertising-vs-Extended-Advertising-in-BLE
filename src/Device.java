@@ -29,6 +29,7 @@ public abstract class Device extends Thread {
     //Advertising break period from 20 ms to 10 min
     long advertiseBreak;
     Integer deviceToListenTo;
+    Instant scanningSince;
     enum Mode {
         WAIT,
         SCAN,
@@ -96,6 +97,13 @@ public abstract class Device extends Thread {
                 this.receivedMessages.remove(i);
                 i--;
             }
+        }
+    }
+    void scanningCheck() {
+        if(this.scanningSince == null)this.scanningSince = Instant.now();
+        else if(this.scanningSince.plusMillis(1000).isBefore(Instant.now())) {
+            this.mode = Mode.FINISHED;
+            System.out.println("Scanning for nothing");
         }
     }
 }

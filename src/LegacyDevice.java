@@ -14,11 +14,13 @@ public class LegacyDevice extends Device {
     LegacyDevice(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize){ super(deviceID, advertiseBreak, deviceToListenTo, dataSize);}
     @Override
     void scan() {
+        this.scanningCheck();
         for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
-            if(!World.getInstance().channels[i].isEmpty()) {
+            if(!World.getInstance().channels[i].isEmpty() && !World.getInstance().channels[i].inAirConflict) {
                 Message currentMessage = World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryLegacyMessage) || (this.deviceToListenTo != null && currentMessage.senderID != this.deviceToListenTo))continue;
                 if(this.isMessageNew(currentMessage)) {
+                    this.scanningSince = null;
                     this.receivedMessages.add(new Pair<Message, Instant>(currentMessage, Instant.now()));
                     for (byte b : ((PrimaryLegacyMessage) currentMessage).content) {
                         //System.out.print(b + " ");
