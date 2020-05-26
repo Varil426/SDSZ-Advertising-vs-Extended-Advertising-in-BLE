@@ -89,11 +89,10 @@ public abstract class Device extends Thread {
         int nanos = (int) number%1000000;
         return new Pair<>(millis, nanos);
     }
-    //TODO Put removeOldMessages to use
     void removeOldMessages() {
         for (int i = 0; i < this.receivedMessages.size(); i++) {
-            //Remove messages older than 10 ms
-            if(this.receivedMessages.get(i).getR().isBefore(Instant.now().plusNanos(10000000))) {
+            //Remove messages older than 500 ms
+            if(this.receivedMessages.get(i).getR().isAfter(Instant.now().plusMillis(500))) {
                 this.receivedMessages.remove(i);
                 i--;
             }

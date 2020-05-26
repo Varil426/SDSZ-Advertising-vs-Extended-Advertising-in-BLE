@@ -38,9 +38,8 @@ public class LegacyDevice extends Device {
 
     @Override
     void advertise() {
-        //TODO tmp zmienić żeby brało pod uwagę rozmiar wiadomości a nie stałe
         //Multiply by 1000000000 to get time to sent in nanoseconds
-        long tmp = (long) Math.ceil((32*1000)/1048576)*1000000;
+        long tmp = (long) Math.ceil(((this.message.content.length + 4 + 4)*1000)/1048576)*1000000;
         if(this.advertiseFor > this.advertiseCounter) {
             int randChannel = this.rand.nextInt(3) + 37;
             while (this.advertisedOn.contains(randChannel)) {
@@ -77,6 +76,7 @@ public class LegacyDevice extends Device {
         while (this.mode != Mode.FINISHED) {
             switch (this.mode) {
                 case SCAN:
+                    this.removeOldMessages();
                     this.scan();
                     break;
                 case WAIT:

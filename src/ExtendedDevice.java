@@ -41,6 +41,7 @@ public class ExtendedDevice extends Device {
                     this.secondaryAdvertise();
                     break;
                 case SCAN:
+                    this.removeOldMessages();
                     this.scan();
                     break;
                 case LISTEN:
@@ -81,7 +82,6 @@ public class ExtendedDevice extends Device {
     void secondaryAdvertise() {
         if(Instant.now().isAfter(this.primary.timeForSecondary) && this.advertiseCounter < 1) {
             //Secondary payload size times 1000000000 to get time in nanoseconds
-            //TODO Smieszna kolejność działń potrzebna, żeby nie pojawiły się błędy numeryczne. Może przejść na makrosekundy
             long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000)/1048576)*100000;
             World.getInstance().channels[this.primary.channel].setPayload(this.secondary, tmp);
             try {

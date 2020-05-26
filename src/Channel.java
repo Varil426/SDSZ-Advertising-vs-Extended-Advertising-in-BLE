@@ -27,7 +27,7 @@ public class Channel {
     }
 
     boolean isEmpty() {
-        //TODO Usuwanie danych od razu powoduje problemy, dużo paczek jest pomijanych
+        //Data is being deleted too fast
         /*if(!this.empty && this.fullUntil.isBefore(Instant.now())) {
             this.clearPayload();
             this.empty = true;
