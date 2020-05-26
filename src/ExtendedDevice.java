@@ -15,14 +15,17 @@ public class ExtendedDevice extends Device {
         super(deviceID, advertiseBreak);
     }
     ExtendedDevice(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize){ super(deviceID, advertiseBreak, deviceToListenTo, dataSize);}
+    ExtendedDevice(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize, boolean randomDelay){ super(deviceID, advertiseBreak, deviceToListenTo, dataSize, randomDelay);}
     @Override
     public void run() {
         if(this.mode != Mode.SCAN) {
-            //Generate up to 1 ms delay to avoid cancelling out of signals
-            try {
-                sleep(0,this.rand.nextInt(1000000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if(this.randomDelay) {
+                //Generate up to 1 ms delay to avoid cancelling out of signals
+                try {
+                    sleep(0,this.rand.nextInt(1000000));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
         while (this.mode != Mode.FINISHED) {
@@ -47,6 +50,7 @@ public class ExtendedDevice extends Device {
                 case LISTEN:
                     this.secondaryListen();
             }
+            //System.out.println(deviceID + " " + mode);
         }
     }
 
@@ -82,7 +86,7 @@ public class ExtendedDevice extends Device {
     void secondaryAdvertise() {
         if(Instant.now().isAfter(this.primary.timeForSecondary) && this.advertiseCounter < 1) {
             //Secondary payload size times 1000000000 to get time in nanoseconds
-            long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000)/1048576)*100000;
+            long tmp = (long) Math.ceil(((this.secondary.content.length + 4 + 4 + 1) * 1000000)/1048576)*100;
             World.getInstance().channels[this.primary.channel].setPayload(this.secondary, tmp);
             try {
                 Pair<Long, Integer> time = this.getMillisAndNanos(tmp);
@@ -102,7 +106,7 @@ public class ExtendedDevice extends Device {
         this.scanningCheck();
         for (int i = World.getInstance().numberOfChannels-3; i < World.getInstance().numberOfChannels; i++) {
             if(!World.getInstance().channels[i].isEmpty() && !World.getInstance().channels[i].inAirConflict) {
-                Message currentMessage = World.getInstance().channels[i].getPayload();
+                PrimaryExtendedMessage currentMessage = (PrimaryExtendedMessage) World.getInstance().channels[i].getPayload();
                 if(!(currentMessage instanceof PrimaryExtendedMessage) || (this.deviceToListenTo != null && currentMessage.senderID != this.deviceToListenTo))continue;
                 if(this.isMessageNew(currentMessage)) {
                     this.scanningSince = null;
@@ -115,9 +119,9 @@ public class ExtendedDevice extends Device {
     }
 
     void secondaryListen() {
-        if(!World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() && !World.getInstance().channels[this.receivedAdvertisement.channel].inAirConflict && this.deviceToListenTo == World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) {
+        if(!World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() && !World.getInstance().channels[this.receivedAdvertisement.channel].inAirConflict) {
             SecondaryMessage currentMessage = (SecondaryMessage) World.getInstance().channels[this.receivedAdvertisement.channel].getPayload();
-            if(this.isMessageNew(currentMessage)) {
+            if(currentMessage != null && currentMessage.senderID == this.deviceToListenTo && this.isMessageNew(currentMessage)) {
                 for (byte b : currentMessage.content) {
                     this.receivedData.add(b);
                 }
@@ -125,14 +129,14 @@ public class ExtendedDevice extends Device {
                 this.mode = Mode.SCAN;
                 if(currentMessage.lastMessage) {
                     this.mode = Mode.FINISHED;
-                    System.out.println(this.receivedData.toString());
+                    //System.out.println(this.receivedData.toString());
                 }
             }
-            return;
+            //return;
         }
-        if((World.getInstance().channels[this.receivedAdvertisement.channel].isEmpty() || this.deviceToListenTo != World.getInstance().channels[this.receivedAdvertisement.channel].getPayload().senderID) && this.receivedAdvertisement.timeForSecondary.plusMillis(50).isBefore(Instant.now())) {
+        if(this.receivedAdvertisement.timeForSecondary.plusMillis(50).isBefore(Instant.now())) {
             this.mode = Mode.SCAN;
-            System.out.println("Secondary missed");
+            //System.out.println("Secondary missed");
         }
     }
 
@@ -140,7 +144,8 @@ public class ExtendedDevice extends Device {
         this.advertiseCounter = 0;
         this.advertisedOn.clear();
         try {
-            sleep(this.advertiseBreak,this.rand.nextInt(500000));
+            if(this.randomDelay) sleep(this.advertiseBreak, this.rand.nextInt(500000));
+            else sleep(this.advertiseBreak);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

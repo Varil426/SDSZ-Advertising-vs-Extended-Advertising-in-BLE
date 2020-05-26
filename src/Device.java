@@ -20,6 +20,7 @@ public abstract class Device extends Thread {
     Random rand = new Random();
     int dataSize;
     byte[] data;
+    boolean randomDelay = true;
     ArrayList<Byte> receivedData = new ArrayList<>();
     ArrayList<Pair<Message, Instant>> receivedMessages;
     ArrayList<Integer> advertisedOn = new ArrayList<>();
@@ -62,16 +63,20 @@ public abstract class Device extends Thread {
         this.deviceToListenTo = deviceToListenTo;
         this.dataSize = dataSize;
     }
+    Device(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize, boolean randomDelay) {
+        this(deviceID, advertiseBreak, deviceToListenTo, dataSize);
+        this.randomDelay = randomDelay;
+    }
     abstract void scan();
     abstract void advertise();
     abstract public void run();
     void generateContent() {
         this.data = new byte[this.dataSize];
         rand.nextBytes(this.data);
-        for (byte b : this.data) {
+        /*for (byte b : this.data) {
             System.out.print(b + ", ");
         }
-        System.out.println();
+        System.out.println();*/
     }
     boolean isMessageNew(Message receivedMessage) {
         if(!this.receivedMessages.isEmpty()) {
@@ -102,7 +107,7 @@ public abstract class Device extends Thread {
         if(this.scanningSince == null)this.scanningSince = Instant.now();
         else if(this.scanningSince.plusMillis(1000).isBefore(Instant.now())) {
             this.mode = Mode.FINISHED;
-            System.out.println("Scanning for nothing");
+            //System.out.println("Scanning for nothing");
         }
     }
 }

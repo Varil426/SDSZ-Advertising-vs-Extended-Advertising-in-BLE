@@ -12,6 +12,7 @@ public class LegacyDevice extends Device {
         super(deviceID, advertiseBreak);
     }
     LegacyDevice(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize){ super(deviceID, advertiseBreak, deviceToListenTo, dataSize);}
+    LegacyDevice(int deviceID, long advertiseBreak, int deviceToListenTo, int dataSize, boolean randomDelay) { super(deviceID, advertiseBreak, deviceToListenTo, dataSize, randomDelay);}
     @Override
     void scan() {
         this.scanningCheck();
@@ -29,7 +30,7 @@ public class LegacyDevice extends Device {
                     //System.out.println();
                     if(currentMessage.lastMessage) {
                         this.mode = Mode.FINISHED;
-                        System.out.println(this.receivedData.toString());
+                        //System.out.println(this.receivedData.toString());
                     }
                 }
             }
@@ -39,7 +40,7 @@ public class LegacyDevice extends Device {
     @Override
     void advertise() {
         //Multiply by 1000000000 to get time to sent in nanoseconds
-        long tmp = (long) Math.ceil(((this.message.content.length + 4 + 4)*1000)/1048576)*1000000;
+        long tmp = (long) Math.ceil(((this.message.content.length + 4 + 4)*10000000)/1048576)*100;
         if(this.advertiseFor > this.advertiseCounter) {
             int randChannel = this.rand.nextInt(3) + 37;
             while (this.advertisedOn.contains(randChannel)) {
@@ -67,10 +68,13 @@ public class LegacyDevice extends Device {
     @Override
     public void run() {
         if(this.mode != Mode.SCAN) {
-            try {
-                sleep(0,this.rand.nextInt(1000000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if(this.randomDelay) {
+                //Generate up to 1 ms delay to avoid cancelling out of signals
+                try {
+                    sleep(0,this.rand.nextInt(1000000));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
         while (this.mode != Mode.FINISHED) {
@@ -98,7 +102,8 @@ public class LegacyDevice extends Device {
         int numberOfParts = (int) Math.ceil(this.data.length/23);
         ByteBuffer buffer;
         try {
-            sleep(this.advertiseBreak, this.rand.nextInt(500000));
+            if(this.randomDelay) sleep(this.advertiseBreak, this.rand.nextInt(500000));
+            else sleep(this.advertiseBreak);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -7,10 +7,10 @@ class World {
         this.worldStartTime = System.nanoTime();
         this.numberOfChannels = 40;
         this.channels = new Channel[numberOfChannels];
-        this.instance = this;
+        World.instance = this;
     }
     static World getInstance() {
-        if(instance == null) return new World();
-        else return instance;
+        if(World.instance == null) return new World();
+        return instance;
     }
 }

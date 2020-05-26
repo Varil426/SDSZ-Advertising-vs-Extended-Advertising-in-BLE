@@ -1,57 +1,81 @@
+import java.util.ArrayList;
+
 public class Simulation {
     public static void main(String[] args) {
         //Set simulation stage
-        for (int i = 0; i < World.getInstance().numberOfChannels; i++) {
+        World world = World.getInstance();
+        for (int i = 0; i < world.numberOfChannels; i++) {
             World.getInstance().channels[i] = new Channel(i);
         }
-        World world = World.getInstance();
+        int loops = 100;
+        ArrayList<Device> devices = new ArrayList<>();
+        for (int i = 0; i < loops; i++) {
+            devices.add(setUpExtendedDeviceForAdvertising(20,10000,true));
+            devices.add(setUpExtendedDeviceForAdvertising(20,10000,true));
+            devices.add(setUpExtendedDeviceForListening(0));
+            devices.add(setUpExtendedDeviceForListening(1));
+            Simulation.deviceIDs = 0;
 
-        //Legacy
-        System.out.println("Legacy");
-        LegacyDevice a = new LegacyDevice(0, 20, -1, 1024);
-        a.generateContent();
-        a.generateAdvertisement();
-        System.out.println(a.data.length);
-        a.mode = Device.Mode.ADVERTISE;
-        LegacyDevice b = new LegacyDevice(1, 20, 0, 1024);
-        b.mode = Device.Mode.SCAN;
-        //Run threads
-        a.start();
-        b.start();
-        //Join threads
-        try {
-            a.join();
-            b.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            long start = System.nanoTime();
+            for (Device device : devices) {
+                device.start();
+            }
+            for (Device device : devices) {
+                try {
+                    device.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            long finish = System.nanoTime();
+
+            //Get data
+            int sentData = 0;
+            int receivedData = 0;
+            for (Device device : devices) {
+                sentData += device.dataSize;
+                receivedData += device.receivedData.size();
+            }
+
+            devices.clear();
+            for (Channel channel : World.getInstance().channels) {
+                channel.clearPayload();
+            }
+
+            Result.getInstance().setResults(i, sentData, receivedData, Math.abs(start - finish)/1000000);
+            Result.getInstance().print();
+            Result.getInstance().reset();
         }
-        System.out.println("DONE");
+    }
+    static int deviceIDs = 0;
+    static LegacyDevice setUpLegacyDeviceForAdvertising(int advertiseBreak, int dataSize, boolean randomDelay) {
+        LegacyDevice device = new LegacyDevice(Simulation.deviceIDs, advertiseBreak, -1, dataSize, randomDelay);
+        Simulation.deviceIDs++;
+        device.generateContent();
+        device.generateAdvertisement();
+        device.mode = Device.Mode.ADVERTISE;
+        return device;
+    }
 
-        for (Channel channel : World.getInstance().channels) {
-            channel.clearPayload();
-        }
+    static LegacyDevice setUpLegacyDeviceForListening(int deviceToListenTo) {
+        LegacyDevice device = new LegacyDevice(Simulation.deviceIDs, 20, deviceToListenTo, 0);
+        Simulation.deviceIDs++;
+        device.mode = Device.Mode.SCAN;
+        return device;
+    }
 
-        //Extended
-        System.out.println("Extended");
-        ExtendedDevice c = new ExtendedDevice(0, 20, -1, 1024);
-        c.generateContent();
-        c.generatePrimaryAdvertisement();
-        System.out.println(c.data.length);
-        c.mode = Device.Mode.ADVERTISE;
-        ExtendedDevice d = new ExtendedDevice(1, 20, 0, 1024);
-        d.mode = Device.Mode.SCAN;
-        System.out.println();
-        //Run threads
-        c.start();
-        d.start();
-        //Join threads
-        try {
-            c.join();
-            d.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("DONE");
-
+    static ExtendedDevice setUpExtendedDeviceForAdvertising(int advertiseBreak, int dataSize, boolean randomDelay) {
+        ExtendedDevice device = new ExtendedDevice(Simulation.deviceIDs, advertiseBreak, -1, dataSize, randomDelay);
+        Simulation.deviceIDs++;
+        device.generateContent();
+        device.generatePrimaryAdvertisement();
+        device.mode = Device.Mode.ADVERTISE;
+        return device;
+    }
+    static ExtendedDevice setUpExtendedDeviceForListening(int deviceToListenTo){
+        ExtendedDevice device = new ExtendedDevice(Simulation.deviceIDs, 20, deviceToListenTo, 0);
+        Simulation.deviceIDs++;
+        device.mode = Device.Mode.SCAN;
+        return device;
     }
 }
