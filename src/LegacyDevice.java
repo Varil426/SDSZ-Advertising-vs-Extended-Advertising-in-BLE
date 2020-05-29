@@ -40,7 +40,7 @@ public class LegacyDevice extends Device {
     @Override
     void advertise() {
         //Multiply by 1000000000 to get time to sent in nanoseconds
-        long tmp = (long) Math.ceil(((this.message.content.length + 4 + 4)*10000000)/1048576)*100;
+        long tmp = (long) Math.ceil(((this.message.content.length + 4 + 4 + 1)*10000000)/1048576)*100;
         if(this.advertiseFor > this.advertiseCounter) {
             int randChannel = this.rand.nextInt(3) + 37;
             while (this.advertisedOn.contains(randChannel)) {
@@ -56,7 +56,7 @@ public class LegacyDevice extends Device {
             }
             this.advertiseCounter++;
         } else {
-            if(this.contentPart <= (int) Math.ceil(this.data.length/23)) {
+            if(this.contentPart <= (int) Math.ceil(this.data.length/22)) {
                 this.generateAdvertisement();
             } else {
                 this.mode = Mode.FINISHED;
@@ -99,7 +99,7 @@ public class LegacyDevice extends Device {
     void generateAdvertisement() {
         this.advertiseCounter = 0;
         this.advertisedOn.clear();
-        int numberOfParts = (int) Math.ceil(this.data.length/23);
+        int numberOfParts = (int) Math.ceil(this.data.length/22);
         ByteBuffer buffer;
         try {
             if(this.randomDelay) sleep(this.advertiseBreak, this.rand.nextInt(500000));
@@ -108,11 +108,11 @@ public class LegacyDevice extends Device {
             e.printStackTrace();
         }
         if(this.contentPart == numberOfParts) {
-            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*23, this.data.length));
+            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*22, this.data.length));
             this.message = new PrimaryLegacyMessage(this.rand.nextInt(),this.deviceID,buffer.array(), true);
         }
         else {
-            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*23, (this.contentPart+1)*23));
+            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*22, (this.contentPart+1)*22));
             this.message = new PrimaryLegacyMessage(this.rand.nextInt(),this.deviceID,buffer.array());
         }
         this.contentPart++;

@@ -57,7 +57,7 @@ public class ExtendedDevice extends Device {
     @Override
     void advertise() {
         //32 * 1000000000 - primary payload size is const 32 bytes, times 1000000000 to get time in nanoseconds
-        long tmp = (long) Math.ceil(32000000/1048576) * 100;
+        long tmp = (long) Math.ceil(20000000/1048576) * 100;
         if(this.advertiseFor > this.advertiseCounter && this.contentPart <= (int) Math.ceil(this.data.length/247)) {
             int randChannel = this.rand.nextInt(3) + 37;
             while (this.advertisedOn.contains(randChannel)) {
@@ -73,7 +73,7 @@ public class ExtendedDevice extends Device {
             }
             this.advertiseCounter++;
         } else {
-            if(this.contentPart <= (int) Math.ceil(this.data.length/247)) {
+            if(this.contentPart <= (int) Math.ceil(this.data.length/246)) {
                 this.generateSecondaryAdvertisement();
                 this.mode = Mode.SECONDARY;
             } else {
@@ -153,14 +153,14 @@ public class ExtendedDevice extends Device {
     }
     void generateSecondaryAdvertisement() {
         this.advertiseCounter = 0;
-        int numberOfParts = (int) Math.ceil(this.data.length/247);
+        int numberOfParts = (int) Math.ceil(this.data.length/246);
         ByteBuffer buffer;
         if(this.contentPart == numberOfParts) {
-            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*247, this.data.length));
+            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*246, this.data.length));
             this.secondary = new SecondaryMessage(this.rand.nextInt(),this.deviceID,buffer.array(), true);
         }
         else {
-            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*247, (this.contentPart+1)*247));
+            buffer = ByteBuffer.wrap(Arrays.copyOfRange(this.data,this.contentPart*246, (this.contentPart+1)*246));
             this.secondary = new SecondaryMessage(this.rand.nextInt(),this.deviceID,buffer.array());
         }
         this.contentPart++;

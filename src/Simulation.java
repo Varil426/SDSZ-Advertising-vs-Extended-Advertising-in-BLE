@@ -9,9 +9,12 @@ public class Simulation {
         }
         int loops = 100;
         ArrayList<Device> devices = new ArrayList<>();
+
+        int dataSize = 0;
         for (int i = 0; i < loops; i++) {
-            devices.add(setUpExtendedDeviceForAdvertising(20,10000,true));
-            devices.add(setUpExtendedDeviceForAdvertising(20,10000,true));
+            if(i%10==0)dataSize+=1024;
+            devices.add(setUpExtendedDeviceForAdvertising(20,dataSize,true));
+            devices.add(setUpExtendedDeviceForAdvertising(20,dataSize,true));
             devices.add(setUpExtendedDeviceForListening(0));
             devices.add(setUpExtendedDeviceForListening(1));
             Simulation.deviceIDs = 0;
