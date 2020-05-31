@@ -13,10 +13,17 @@ public class Simulation {
         int dataSize = 0;
         for (int i = 0; i < loops; i++) {
             if(i%10==0)dataSize+=1024;
-            devices.add(setUpExtendedDeviceForAdvertising(20,dataSize,true));
-            devices.add(setUpExtendedDeviceForAdvertising(20,dataSize,true));
-            devices.add(setUpExtendedDeviceForListening(0));
-            devices.add(setUpExtendedDeviceForListening(1));
+            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
+            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
+            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
+            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
+            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
+            devices.add(setUpLegacyDeviceForListening(0));
+            devices.add(setUpLegacyDeviceForListening(1));
+            devices.add(setUpLegacyDeviceForListening(2));
+            devices.add(setUpLegacyDeviceForListening(3));
+            devices.add(setUpLegacyDeviceForListening(4));
+
             Simulation.deviceIDs = 0;
 
             long start = System.nanoTime();
