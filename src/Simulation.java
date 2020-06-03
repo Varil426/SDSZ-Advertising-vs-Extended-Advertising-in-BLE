@@ -13,16 +13,13 @@ public class Simulation {
         int dataSize = 0;
         for (int i = 0; i < loops; i++) {
             if(i%10==0)dataSize+=1024;
-            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
-            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
-            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
-            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
-            devices.add(setUpLegacyDeviceForAdvertising(20,dataSize,true));
-            devices.add(setUpLegacyDeviceForListening(0));
-            devices.add(setUpLegacyDeviceForListening(1));
-            devices.add(setUpLegacyDeviceForListening(2));
-            devices.add(setUpLegacyDeviceForListening(3));
-            devices.add(setUpLegacyDeviceForListening(4));
+            int numberOfPairs = 100;
+            for (int j = 0; j < numberOfPairs; j++) {
+                devices.add(setUpExtendedDeviceForAdvertising(20,dataSize,true));
+            }
+            for (int j = 0; j < numberOfPairs; j++) {
+                devices.add(setUpExtendedDeviceForListening(j));
+            }
 
             Simulation.deviceIDs = 0;
 
